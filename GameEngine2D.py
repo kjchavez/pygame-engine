@@ -197,7 +197,12 @@ class NewtonianEntity(GraphicEntity):
         self.force = np.array(force,float) * self.scale
        
         self.rect = pygame.Rect(self.position-self.centerOfMass,self.size)
+        self.init()
        
+    def init(self):
+		# Initialize any non-standard parameters here
+		pass 
+    
     def process(self,dt):
         # TODO: Collision detection
         # Kinematics
