@@ -4,7 +4,7 @@ import pygame
  
 from GameEngine2D import NewtonWorld, NewtonianEntity
  
-kp = 10
+kp = 20
 kv = 150
  
 class MouseTracker(NewtonianEntity):
@@ -69,10 +69,10 @@ def main():
     pygame.display.flip()
     
     world = NewtonWorld("NewtonWorld",screen,framesPerSecond=40,scale=SCALE)
-    """
-    square = MouseTracker(world,position=worldSize/2,mass=1)
-    world.add(square)
-    """
+    
+    #square = MouseTracker(world,position=worldSize/2,mass=1)
+    #world.add(square)
+    
     paddleImage = pygame.Surface((30,120))
     paddleImage.fill(pygame.Color('red'))
     paddle1 = MouseTracker1DOF(world,position=worldSize/2-(38,0),mass=1,image=paddleImage)

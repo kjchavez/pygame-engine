@@ -177,7 +177,7 @@ class NewtonianEntity(GraphicEntity):
     *Note that 'force' and 'inertia' values need to be scaled appropriately
     ----------------------------------------------------------------
     """
-    def __init__(self,world,mass=1,centerOfMass=None,inertia=1,position=(0,0),velocity=(0,0),acceleration=(0,0),force=(0,0),image=None):
+    def __init__(self,world,mass=1,centerOfMass=None,inertia=1,position=(0,0),velocity=(0,0),acceleration=(0,0),force=(0,0),image=None,charge=None):
         self.world = world
         self.type = "NewtonianEntity"
         self.scale = self.world.scale
@@ -195,6 +195,7 @@ class NewtonianEntity(GraphicEntity):
         if not centerOfMass: centerOfMass = self.size/2
         self.centerOfMass = np.array(centerOfMass,float)
         self.force = np.array(force,float) * self.scale
+        self.charge = charge
        
         self.rect = pygame.Rect(self.position-self.centerOfMass,self.size)
         self.init()
@@ -250,9 +251,17 @@ class NewtonWorld(World):
         self.scale = scale
        
         # Define Physical Constants
+        self.fields = []
         self.gravity = 9.8 * scale  # Gravitational force into the screen
         self.muS = muS				# Coefficient of Static Friction
         self.muK = muK				# Coefficient of Kinetic Friction
+        
+        for function in dir(self):
+			if function.startswith("apply_"):
+				if function not in "apply_fields":
+					# The part of the function name after the underscore
+					# should be the field's name
+					self.fields.append(function.partition('_')[2])
        
     def run_main_loop(self):
         while True:
@@ -269,7 +278,7 @@ class NewtonWorld(World):
 			    if keysPressed[K_LEFT]:
 			        soleEntity.add_force((-30.,0.))
 								   
-            self.apply_friction()
+            self.apply_fields()
             self.main_loop()
            
             for event in pygame.event.get():
@@ -279,6 +288,18 @@ class NewtonWorld(World):
                     if event.key == K_ESCAPE:
                         return
  
+    def apply_fields(self):
+        for field in self.fields:
+            eval("self.apply_"+field+"()")
+			
+    def get_fields(self):
+        return self.fields
+
+class StandardPhysicalWorld(NewtonWorld):
+    """
+	Extends the NewtonWorld class by adding standard "fields" that interact
+	with all objects
+    """			
     def apply_friction(self):
         for entity in self.get_entities():
             if LA.norm(entity.velocity) <= 0.01:
@@ -294,6 +315,8 @@ class NewtonWorld(World):
                 #print "kinitec friction:",kineticFriction, "velocity:",entity.velocity
                 entity.add_force(kineticFriction)
                 return
+                
+
 def main():
     SCALE = 10 # pixels per meter
     pygame.init()
@@ -304,7 +327,7 @@ def main():
     screen.fill((255,255,255))
     pygame.display.flip()
    
-    world = NewtonWorld("NewtonWorld",screen,framesPerSecond=40,scale=SCALE)
+    world = StandardPhysicalWorld("NewtonWorld",screen,framesPerSecond=40,scale=SCALE)
     square = NewtonianEntity(world,position=worldSize/2,mass=1)
     world.add(square)
    
