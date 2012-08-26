@@ -12,7 +12,7 @@ from GameEngine2D import GraphicEntity
 kp = 2000
 kv = 500
 BALL_SPEED = 40. # meters per second
-DIFFICULTY = "hard" #"medium" #"hard"
+DIFFICULTY = "easy" #"medium" #"hard"
 
 class Score(GraphicEntity):
 	def __init__(self,world,side):
@@ -45,7 +45,7 @@ class Ball(CollidingEntity):
 		self.collisionPoints = [
 								(np.array([0,15]),np.array([-1,0])),
 								(np.array([30,15]),np.array([1,0])),
-								(np.array([30,0]),np.array([0,-1])),
+								(np.array([15,0]),np.array([0,-1])),
 								(np.array([15,30]),np.array([0,1]))
 							   ]
 							   
@@ -122,7 +122,7 @@ class ComputerPaddle(Paddle):
 				expectedYPos = -expectedYPos
 			elif expectedYPos > self.world.size[1]:
 				expectedYPos = self.world.size[1] - (expectedYPos-self.world.size[1])
-		positionDesired[self.degreeOfFreedom] = expectedYPos
+			positionDesired[self.degreeOfFreedom] = expectedYPos
 		positionDesired[1-self.degreeOfFreedom] = self.fixedCoordinate
 		velocityDesired = np.array((0.,0.))
 
