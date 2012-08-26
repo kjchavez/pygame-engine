@@ -19,7 +19,8 @@ class Field(object):
 		
 	def apply_all(self):
 		for entity in self.world.get_entities():
-			self.apply(entity)
+			if isinstance(entity,NewtonianEntity):
+				self.apply(entity)
 			
 class Gravity(Field):
 	def __init__(self,world,g):

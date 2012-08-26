@@ -145,8 +145,7 @@ class GraphicEntity(Entity):
  
         self.size = np.array(self.image.get_size())
         self.type = "GraphicEntity"
-       
-        self.rect = pygame.Rect(self.position - size/2,size)
+        self.rect = pygame.Rect(self.position - self.size/2,self.size)
    
     def render(self,surface):
         surface.blit(self.image,self.rect)
@@ -160,83 +159,6 @@ class GraphicEntity(Entity):
     def move_to(self,position):
         self.position = np.array(position)
         self.rect.center = self.position
-       
-class NewtonianEntity(GraphicEntity):
-    """
-    Arguments:
-    ----------------------------------------------------------------
-    mass            | mass of the entity (kg)
-    centerOfMass    | relative to topleft of image (if None, use center of image) IN PIXELS
-    inertia         | moment of inertia wrt the z axis (kg * m^2)
-    position        | position of center of mass in world (meters,meters)
-    velocity        | in meters per second (m/s)
-    acceleration    | in meters per second per second (m/s^2)
-    force           | in Newtons (kg * m/s^2)
-    image           | entity's image
-   
-    *Note that 'force' and 'inertia' values need to be scaled appropriately
-    ----------------------------------------------------------------
-    """
-    def __init__(self,world,mass=1,centerOfMass=None,inertia=1,position=(0,0),velocity=(0,0),acceleration=(0,0),force=(0,0),image=None,charge=None):
-        self.world = world
-        self.type = "NewtonianEntity"
-        self.scale = self.world.scale
- 
-        self.image = image
-        if not image:
-            self.image = pygame.Surface((20,20))
-            self.image.fill(pygame.Color('red'))
-        self.size = np.array(self.image.get_size())
-               
-        self.position = np.array(position,float)*self.world.scale
-        self.velocity = np.array(velocity,float)*self.world.scale
-        self.acceleration = np.array(acceleration,float)*self.world.scale
-        self.mass = mass
-        if not centerOfMass: centerOfMass = self.size/2
-        self.centerOfMass = np.array(centerOfMass,float)
-        self.force = np.array(force,float) * self.scale
-        self.charge = charge
-       
-        self.rect = pygame.Rect(self.position-self.centerOfMass,self.size)
-        self.init()
-       
-    def init(self):
-		# Initialize any non-standard parameters here
-		pass 
-    
-    def process(self,dt):
-        # TODO: Collision detection
-        # Kinematics
-        self.acceleration = self.force * dt / self.mass
-        self.velocity += self.acceleration * dt
-        self.position += self.velocity
-       
-        self.rect.topleft = self.position - self.centerOfMass
-       
-    def set_force(self,force):
-        # Force argument is in N, force attribute is in kg * pixels/s^2
-        self.force = np.array(force) * self.scale
-       
-    def add_force(self,force):
-        self.force += np.array(force) * self.scale
-       
-    def get_position(self,units='SI'):
-        if units == 'SI':
-            return self.position/self.scale
-        else:
-            return self.position
-           
-    def get_velocity(self,units="SI"):
-        if units == "SI":
-            return self.velocity/self.scale
-        else:
-            return self.velocity
-           
-    def get_acceleration(self,units="SI"):
-        if units == "SI":
-            return self.acceleration/self.scale
-        else:
-            return self.acceleration
              
  
 class NewtonWorld(World):
@@ -253,15 +175,6 @@ class NewtonWorld(World):
         # Define Physical Constants
         self.fields = []
         self.gravity = 9.8 * scale  # Gravitational force into the screen
-        self.muS = muS				# Coefficient of Static Friction
-        self.muK = muK				# Coefficient of Kinetic Friction
-        
-        for function in dir(self):
-			if function.startswith("apply_"):
-				if function not in "apply_fields":
-					# The part of the function name after the underscore
-					# should be the field's name
-					self.fields.append(function.partition('_')[2])
        
     def run_main_loop(self):
         while True:
@@ -290,32 +203,8 @@ class NewtonWorld(World):
  
     def apply_fields(self):
         for field in self.fields:
-            eval("self.apply_"+field+"()")
-			
-    def get_fields(self):
-        return self.fields
+            field.apply_all()
 
-class StandardPhysicalWorld(NewtonWorld):
-    """
-	Extends the NewtonWorld class by adding standard "fields" that interact
-	with all objects
-    """			
-    def apply_friction(self):
-        for entity in self.get_entities():
-            if LA.norm(entity.velocity) <= 0.01:
-                if LA.norm(entity.force) > 0:
-                    staticFriction = -min(self.muS*entity.mass*self.gravity/LA.norm(entity.force),1)*entity.force
-                    #print "static friction:",staticFriction
-                    entity.add_force(staticFriction)
-                    return
-                else:
-                    entity.velocity = np.array((0.,0.))
-            else:
-                kineticFriction = -self.muK*entity.mass*self.gravity*entity.velocity/LA.norm(entity.velocity)
-                #print "kinitec friction:",kineticFriction, "velocity:",entity.velocity
-                entity.add_force(kineticFriction)
-                return
-                
 
 def main():
     SCALE = 10 # pixels per meter

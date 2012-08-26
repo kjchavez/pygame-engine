@@ -2,7 +2,8 @@
 import numpy as np
 import pygame
  
-from GameEngine2D import NewtonWorld, NewtonianEntity
+from GameEngine2D import NewtonWorld
+from PhysicsEngine2D import NewtonianEntity
  
 kp = 20
 kv = 150
